@@ -37,6 +37,11 @@ struct function functions[] = {
 // Your thread data structures go here
 
 struct thread_data{
+    int size;
+    int thread_id;
+    long double sum;
+    long double *sample;
+    int num_elements;
 };
 
 struct thread_data *thread_data_array;
@@ -85,7 +90,13 @@ long double monte_carlo_integrate(long double (*f)(long double), long double *sa
 }
 
 void *monte_carlo_integrate_thread(void *args){
-    // Your pthreads code goes here
+    struct thread_data *mydata;
+    mydata = (struct thread_data *) args;
+    printf("Hello World! It's me, thread #%ld!\n", mydata->thread_id);
+    int i;
+    for (i = 0; i < mydata->num_elements; i++){
+        mydata->sum = mydata->sum + mydata->sample[mydata->thread_id + i];
+    }
     pthread_exit(NULL);
 }
 
@@ -143,9 +154,25 @@ int main(int argc, char **argv){
         start = clock();
 
         // Your pthreads code goes here
-
-        printf("Not implemented yet\n");
-        exit(-1);
+	thread_data_array = malloc(n_threads * sizeof(struct thread_data));
+	long double *sample;
+	sample = uniform_sample(target_function.interval, samples, size);
+	pthread_t threads[n_threads];
+	int error_code;
+	long t;
+	for (t = 0; t < n_threads; t++){
+	    printf("In main: creating thread %ld\n", t);
+	    thread_data_array[t].thread_id = t;
+	    thread_data_array[t].sum = 0;
+	    thread_data_array[t].sample = sample;
+	    thread_data_array[t].num_elements = size/n_threads;
+	    error_code = pthread_create(&threads[t], NULL, monte_carlo_integrate_thread, (void *) &thread_data_array[t]);
+	    if (error_code){
+		printf("ERROR pthread_create(): %d\n", error_code);
+	        exit(-1);
+	    };
+	};
+	pthread_exit(NULL);
 
         // Your pthreads code ends here
 
