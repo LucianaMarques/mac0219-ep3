@@ -79,9 +79,9 @@ void print_array(long double *sample, int size){
 
 long double monte_carlo_integrate(long double (*f)(long double), long double *samples, int size){
     // Your sequential code goes here
-    printf("Not implemented yet\n");
-    exit(-1);
-    return 0.0L;
+    long double acc = 0;    
+    for(int i = 0; i < size; i++) f((long double) samples[i]);
+    return acc/size;
 }
 
 void *monte_carlo_integrate_thread(void *args){
